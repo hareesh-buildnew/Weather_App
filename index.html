@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+  </head>
+  <style>
+    .input-container{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        background-color: slategrey;
+        height: 50px;
+        width: auto;
+    }
+
+    .weather-container{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        background-color: rgb(59, 115, 59);
+        height: 400px;
+        width: auto;
+    }
+    #button{
+        background-color: white;
+        cursor: pointer;
+        border-radius: 5px;
+        margin: 5px;
+        border:none
+    }
+    .temperature{
+        font-size: 30px;
+        text-align: center;
+    }
+    .location-data{
+        gap: 25px;
+        font-size: 20px;
+        text-align: center;
+    }
+    .weather-status{
+        gap: 10px;
+        font-size: 20px;
+        text-align: center;
+    }
+    .location{
+        font-weight: bold;
+        font-size: 30px;
+    }
+    .condition{
+        font-weight: bold;
+        font-size: 25px;
+    }
+  </style>
+  <body>
+    <header>
+      <div class="input-container">
+        <input type="text"  id="locationinput" placeholder="Enter location..." style="background-color: rgb(160, 149, 149); border: none; height: 20px;"/>
+        <button id="button">Search</button>
+      </div>
+    </header>
+    <main>
+      <div class="weather-container">
+        <div class="temperature">12.5 °C</div>
+        <div class="location-data">
+          <div class="location">Delhi</div>
+          <span class="time">9:15</span>
+          <span class="day">Friday</span>
+          <span class="date">2026-01-30</span>
+        </div>
+        <div class="weather-status">
+          <div class="icon">
+            <img
+              src="./weathericon.png"
+              alt="weather-status-icon"
+            />
+          </div>
+          <div class="condition">Sunny</div>
+        </div>
+      </div>
+    </main>
+    <script src="WeatherApp.js">
+    </script>
+  </body>
+</html>
