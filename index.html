@@ -6,60 +6,285 @@
     <title>Weather App</title>
   </head>
   <style>
-    .input-container{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 5px;
-        background-color: slategrey;
-        height: 50px;
-        width: auto;
-    }
+      *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-    .weather-container{
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        background-color: rgb(59, 115, 59);
-        height: 400px;
-        width: auto;
+  body {
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(30, 80, 160, 0.55) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 75% 20%, rgba(240, 180, 50, 0.18) 0%, transparent 65%),
+      radial-gradient(ellipse 90% 70% at 50% 50%, rgba(15, 25, 60, 0.9) 0%, transparent 100%),
+      linear-gradient(175deg, #0d1b2a 0%, #1b2845 35%, #1e3a5f 65%, #2a5580 100%);
+    background-attachment: fixed;
+    color: #fff;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ── Subtle noise grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  /* ── Floating ambient orb ── */
+  body::after {
+    content: '';
+    position: fixed;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(70, 140, 220, 0.3) 0%, transparent 70%);
+    top: -80px;
+    right: -100px;
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+    animation: orbFloat 12s ease-in-out infinite alternate;
+  }
+  @keyframes orbFloat {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(-30px, 50px); }
+  }
+
+  /* ── Input / search bar ── */
+  .input-container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    height: 64px;
+    width: 100%;
+    padding: 0 24px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .input-container input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 50px;
+    height: 38px !important;
+    padding: 0 20px;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.4px;
+    width: 280px;
+    max-width: 60vw;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+  }
+  .input-container input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .input-container input:focus {
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+
+  /* ── Search button ── */
+  #button {
+    height: 38px;
+    padding: 0 26px;
+    background: linear-gradient(135deg, #f0c040, #e8a830);
+    color: #1a1a1a;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
+    cursor: pointer;
+    border-radius: 50px;
+    border: none;
+    margin: 0;
+    box-shadow: 0 4px 16px rgba(240, 192, 64, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  #button:hover {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 6px 22px rgba(240, 192, 64, 0.42);
+  }
+  #button:active {
+    transform: scale(0.96);
+  }
+
+  /* ── Main weather layout ── */
+  .weather-container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 56px;
+    min-height: calc(100vh - 64px);
+    width: 100%;
+    padding: 40px 24px;
+    background: transparent;
+  }
+
+  /* ── Temperature ── */
+  .temperature {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 90px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -3px;
+    color: #fff;
+    text-shadow: 0 2px 30px rgba(255, 255, 255, 0.15);
+    text-align: center;
+    animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Location / time block ── */
+  .location-data {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) 0.12s both;
+  }
+
+  .location {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 40px;
+    letter-spacing: -0.5px;
+    color: #fff;
+    text-shadow: 0 2px 20px rgba(255,255,255,0.12);
+    margin-bottom: 4px;
+  }
+
+  .time {
+    font-size: 22px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.82);
+    letter-spacing: 1.5px;
+    display: block;
+  }
+
+  /* ── Glowing accent line under time ── */
+  .time::after {
+    content: '';
+    display: block;
+    width: 38px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #f0c040, transparent);
+    margin: 8px auto 0;
+  }
+
+  .day {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 2.8px;
+    margin-top: 4px;
+  }
+
+  .date {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.38);
+    letter-spacing: 0.8px;
+  }
+
+  /* ── Weather status / icon block ── */
+  .weather-status {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) 0.24s both;
+  }
+
+  .icon {
+    width: 110px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* ── Ambient glow behind icon ── */
+  .icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(240, 192, 64, 0.22) 0%, transparent 72%);
+    filter: blur(18px);
+    z-index: 0;
+  }
+
+  .icon img {
+    position: relative;
+    z-index: 1;
+    width: 86px;
+    height: 86px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 14px rgba(240, 192, 64, 0.45));
+    animation: iconPulse 3.2s ease-in-out infinite alternate;
+  }
+  @keyframes iconPulse {
+    0%   { transform: scale(1);    filter: drop-shadow(0 4px 14px rgba(240,192,64,0.40)); }
+    100% { transform: scale(1.06); filter: drop-shadow(0 6px 22px rgba(240,192,64,0.58)); }
+  }
+
+  /* ── Condition label ── */
+  .condition {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 17px;
+    color: #f0c040;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    text-shadow: 0 0 18px rgba(240, 192, 64, 0.38);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .weather-container {
+      flex-direction: column;
+      gap: 36px;
+      padding-top: 52px;
     }
-    #button{
-        background-color: white;
-        cursor: pointer;
-        border-radius: 5px;
-        margin: 5px;
-        border:none
+    .temperature {
+      font-size: 72px;
     }
-    .temperature{
-        font-size: 30px;
-        text-align: center;
+    .location {
+      font-size: 32px;
     }
-    .location-data{
-        gap: 25px;
-        font-size: 20px;
-        text-align: center;
-    }
-    .weather-status{
-        gap: 10px;
-        font-size: 20px;
-        text-align: center;
-    }
-    .location{
-        font-weight: bold;
-        font-size: 30px;
-    }
-    .condition{
-        font-weight: bold;
-        font-size: 25px;
-    }
+  }
   </style>
   <body>
     <header>
       <div class="input-container">
-        <input type="text"  id="locationinput" placeholder="Enter location..." style="background-color: rgb(160, 149, 149); border: none; height: 20px;"/>
+        <input type="text"  id="locationinput" placeholder="Enter location..." style="background-color: rgb(255, 255, 255); border: none; height: 20px;"/>
         <button id="button">Search</button>
       </div>
     </header>
@@ -68,7 +293,7 @@
         <div class="temperature">12.5 °C</div>
         <div class="location-data">
           <div class="location">Delhi</div>
-          <span class="time">9:15</span>
+          <span class="time">9:15</span><br />
           <span class="day">Friday</span>
           <span class="date">2026-01-30</span>
         </div>
